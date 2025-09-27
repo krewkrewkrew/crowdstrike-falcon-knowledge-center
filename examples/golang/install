@@ -1,0 +1,90 @@
+#!/bin/sh
+
+set -e
+
+die() {
+    echo "Fatal error: $*" >&2
+    echo "OS: '$os', Arch: '$arch', uname: '$(uname -a)'" >&2
+    exit 1
+}
+
+os=$(
+    uname | awk '{print tolower($0)}'
+)
+
+arch=$(
+    uname -m
+)
+
+latest_package_urls() {
+    curl -s https://api.github.com/repos/crowdstrike/gofalcon/releases/latest | grep '"browser_download_url":' | sed 's/"$//g ; s/^.*browser_download_url": "//g'
+}
+
+case "${os}" in
+    darwin)
+        if [ "${arch}" = "amd64" ]; then
+            package_discriminator="Darwin_x86_64"
+        elif [ "${arch}" = "arm64" ]; then
+            package_discriminator="Darwin_arm64"
+        else
+            die "Unsupported architecture for MacOS"
+        fi
+        ;;
+    linux)
+        pkg_arch=$(
+            if [ "${arch}" = "x86_64" ] || [ "${arch}" = "aarch64" ]; then
+                echo "${arch}"
+            else
+                die "Unsupported architecture for Linux"
+            fi
+        )
+
+        if type rpm > /dev/null 2>&1; then
+            package_discriminator="${pkg_arch}.rpm"
+        elif type dpkg > /dev/null 2>&1; then
+            package_discriminator="${pkg_arch}.deb"
+        else
+            die "Unsupported packaging system"
+        fi
+        ;;
+    *)
+        die "Unsupported OS"
+        ;;
+esac
+
+package_url=$(
+    latest_package_urls | grep "$package_discriminator"
+)
+
+package_install() {
+    pkg=$1
+    if [ "$os" = "darwin" ]; then
+        file=$(basename "$pkg")
+        curl -LO "$pkg"
+        tar -xzf "$file" -C /usr/local/bin/
+        rm "$file"
+    elif type dnf > /dev/null 2>&1; then
+        dnf install -q -y "$pkg" || rpm -ivh --nodeps "$pkg"
+    elif type yum > /dev/null 2>&1; then
+        yum install -q -y "$pkg" || rpm -ivh --nodeps "$pkg"
+    elif type zypper > /dev/null 2>&1; then
+        zypper --quiet install -y "$pkg" || rpm -ivh --nodeps "$pkg"
+    elif type rpm > /dev/null 2>&1; then
+        rpm -ivh --nodeps "$pkg"
+    elif type apt-get > /dev/null 2>&1; then
+        file=$(curl -w "%{filename_effective}" -LO "$pkg")
+        dpkg -i "$file"
+        rm "$file"
+    else
+        die "Unsupported packaging system"
+    fi
+}
+
+package_install "$package_url"
+
+echo "   )"
+echo "  (__"
+echo "  _  )_"
+echo " (_)_(_)      Gofalcon examples installed"
+echo "  (o o)       Use 'falcon_<<TAB>>' to discover installed binaries"
+echo " ==\\o/=="

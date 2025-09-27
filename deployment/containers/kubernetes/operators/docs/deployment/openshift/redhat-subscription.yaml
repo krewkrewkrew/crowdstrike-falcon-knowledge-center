@@ -1,0 +1,9 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: falcon-operator
+spec:
+  channel: certified-1.0
+  name: falcon-operator
+  source: certified-operators
+  sourceNamespace: openshift-marketplace

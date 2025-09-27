@@ -1,0 +1,5 @@
+crowdstrike-falconpy
+darkdetect
+gooey
+requests
+tabulate

@@ -1,0 +1,40 @@
+#####
+## Sample configuration file for Linux or Microsoft Windows.
+## This is YAML, so structure and indentation is important.
+## Lines can be uncommented by removing the #. You should not need to change the number of spaces after that.
+## Config options have a single #, comments have a ##. Only uncomment the single # lines if you need them.
+#####
+ 
+sources:
+  syslog_udp_1514:
+    type: syslog
+    mode: udp
+    port: 1514
+    sink: next-gen-siem
+    ## Optional: Max allowed event size (default = 2048 bytes), messages larger than this will be truncated
+    ## Increase this value if you expect larger syslog messages. 
+    ## Be cautious when increasing this value, as it affects memory usage and network bandwidth.
+    ## The max value is 950000 bytes.
+    maxEventSize: 2048
+ 
+  syslog_tcp_1514:
+    type: syslog
+    mode: tcp
+    port: 1514
+    sink: next-gen-siem
+    ## Optional: Max allowed event size (default = 2048 bytes), messages larger than this will be truncated
+    ## Increase this value if you expect larger syslog messages. 
+    ## Be cautious when increasing this value, as it affects memory usage and network bandwidth.
+    ## The max value is 950000 bytes.
+    maxEventSize: 2048
+     
+sinks:
+  next-gen-siem:
+    type: hec
+    token: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    url: https://XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.ingest.YY-Y.crowdstrike.com
+    proxy: none
+    workers: 4
+    ## Optional: maxBatchsize generally handled automatically by FLC but can be manually set if needed
+    ## If set, as of Aug 2025, max payload before compression limit is 32M, minus 2M to account for meta-data (plus 2M buffer)
+    #maxBatchSize: 28000000

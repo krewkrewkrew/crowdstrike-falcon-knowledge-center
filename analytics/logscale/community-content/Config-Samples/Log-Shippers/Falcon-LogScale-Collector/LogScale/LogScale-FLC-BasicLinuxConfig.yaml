@@ -1,0 +1,69 @@
+#####
+## Sample configuration file for Linux.
+## This is YAML, so structure and indentation is important.
+## Lines can be uncommented by removing the #. You should not need to change the number of spaces after that.
+## Config options have a single #, comments have a ##. Only uncomment the single # lines if you need them.
+#####
+
+## Uncomment if you need to manually set the directory. 
+#dataDirectory: /var/lib/humio-log-collector
+
+sources:
+  # Collect local files.
+  var_log:
+    type: file
+    include: /var/log/*.log
+    exclude: /var/log/*.gz
+    sink: logscale
+    ## You can manually specify a parser to be used here.
+    ## This overrides the parser specified in the LogScale UI.
+    #parser: SampleFileParser
+ 
+  # Collect syslog udp 1514.
+  syslog_udp_1514:
+    type: syslog
+    mode: udp
+    port: 1514
+    sink: logscale
+    ## You can manually specify a parser to be used here.
+    ## This overrides the parser specified in the LogScale UI.
+    #parser: SampleSyslogParser
+ 
+  # Collect syslog tcp 1514.
+  syslog_tcp_1514:
+    type: syslog
+    mode: tcp
+    port: 1514
+    sink: logscale
+    ## You can manually specify a parser to be used here.
+    ## This overrides the parser specified in the LogScale UI.
+    #parser: SampleSyslogParser
+ 
+sinks:
+  logscale:
+    type: humio
+    # Replace with your specified ingest token.
+    token: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+    # Replace with the "Ingest URL" on the FLC download page. It must include the "https://" at the beginning. 
+    url: https://XXX.YYY.ZZZ
+    ## Keep this option as "none" unless you actually need a proxy.
+    proxy: none
+    ## The TLS option can be uncommented if you're using a self-signed certificate.
+    ## This generally isn't needed unless it's a self-hosted instance. 
+    #tls:
+      #insecure: true     
+    ## This sets the maximum single event size to 8 MB. You can change as needed.
+    #maxEventSize: 8388608
+    ## Uncomment if you would like to force a specific level of gzip compression. 9 is the highest.
+    #maxBatchSize: 16777216
+    #compression: gzip
+    #compressionLevel: 9
+    ## Uncomment if you want to use disk for event queue storage instead of memory.
+    ## Please note this will be much slower than a memory queue.
+    #queue:
+      #type: disk
+      #fullAction: pause
+      #maxLimitInMB: 4096
+    ## Add more workers to processing. The default is 4 workers. 
+    ## This can be increased if FLC is falling behind on processing.
+    #workers: 8
